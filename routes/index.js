@@ -27,7 +27,7 @@ router.get("/:id/:title", async (req, res) => {
         const androidId = req.params.id;
 
         const result = await mongoose.model(androidId, photoSchema, androidId).find({
-            "page.albumTitle": req.params.title,
+            pages: { $elemMatch : { albumTitle: req.params.title } },
         });
         console.log(result);
         res.json(result);
@@ -41,7 +41,6 @@ router.get("/:id/:title", async (req, res) => {
 router.post("/:id/:title", async (req, res) => {
     try{
         const androidId = req.params.id;
-        const albumId = "album" + androidId;
 
         console.log(req.body);
         
@@ -50,20 +49,6 @@ router.post("/:id/:title", async (req, res) => {
         const deletedList = req.body.deletedList;
 
         var resJson = new Array();
-
-        const albumsave = await mongoose.model(albumId, albumSchema, albumId).findOneAndUpdate({
-            title: req.params.title,
-        }, {
-            $setOnInsert: {
-                title: req.params.title,
-                albumTumbnail: photos[0].uri,
-                albumType: "dateAlbum",
-            }
-        }, {
-            upsert: true,
-            new: true,
-        });
-        console.log(albumsave);
 
         //사진 삭제
         for(idx in deletedList){
@@ -77,46 +62,42 @@ router.post("/:id/:title", async (req, res) => {
             console.log(idx, ": ", photos[idx]);
             const photo = photos[idx];
 
-            if(photo._id) {
-                var result = await mongoose.model(androidId, photoSchema, androidId).updateOne({
-                    _id: photo._id 
-                }, {
-                    $set: {
-                        comment: photo.comment,
-                        page: photo.page,
-                    }
-                });
-                console.log("update : ", result);
-                resJson.push(photo);
-            }
-            else {
-                var datetime; 
-                try {
-                    datetime = new Date(photo.datetime);
-                } catch (error) {
-                    console.log(error);
-                };
+            var datetime; 
+            try {
+                datetime = new Date(photo.datetime);
+            } catch (error) {
+                console.log(error);
+            };
 
-                var result = await mongoose.model(androidId, photoSchema, androidId).create({
+            var result = await mongoose.model(androidId, photoSchema, androidId).findOneAndUpdate({
+                _id: photo._id
+            }, {
+                $set: {
+                    comment: photo.comment,
+                    page: photo.page,
+                },
+                $setOnInsert: {
                     uri: photo.uri,
                     datetime: datetime,
                     location: photo.location,
-                    comment: photo.comment,
-                    page: photo.page,
-                });
-                console.log("create : ", result);
-                resJson.push(result);
-            }
+                }
+            }, {
+                upsert: true,
+                new: true
+            });
+            console.log("result : ", result);
+            resJson.push(result);
         };
 
         res.json({"resJson": resJson});
     
     } catch(err) {
+        console.log(err);
         res.json({"resJson": "ERROR"});
     }
 });
 
-route.get("/:id/search", async (req, res) => {
+router.get("/:id/search", async (req, res) => {
     const androidId = req.params.id;
     const albumId = androidId+"album";
     const query = req.query;

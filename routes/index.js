@@ -27,7 +27,7 @@ router.get("/:id/:title", async (req, res) => {
         const androidId = req.params.id;
 
         const result = await mongoose.model(androidId, photoSchema, androidId).find({
-            pages: { $elemMatch : { albumTitle: req.params.title } },
+            "page.albumTitle": req.params.title
         });
         console.log(result);
         res.json(result);

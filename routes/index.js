@@ -50,8 +50,7 @@ router.post("/:id/:title", async (req, res) => {
         const deletedList = req.body.deletedList;
 
         var resJson = new Array();
-
-        /*
+        
         //첫 생성시 앨범 목록에 추가
         const albumsave = await mongoose.model(albumId, albumSchema, albumId).findOneAndUpdate({
             title: req.params.title,
@@ -65,9 +64,9 @@ router.post("/:id/:title", async (req, res) => {
             upsert: true,
             new: true,
         });
-        console.log("앨범 저장: ", albumsave);*/
+        console.log("앨범 : ", albumsave);
 
-        //사진 삭제(고쳐야함)
+        //사진 삭제
         for(idx in deletedList){
             await mongoose.model(androidId, photoSchema, androidId).deleteOne({
                 _id: deletedList._id,
@@ -125,7 +124,6 @@ router.get("/:id/search", async (req, res) => {
     const albumId = androidId+"album";
     const query = req.query;
     console.log(query);
-
 })
 
 module.exports = router;

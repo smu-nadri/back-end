@@ -41,6 +41,7 @@ router.get("/:id/:title", async (req, res) => {
 router.post("/:id/:title", async (req, res) => {
     try{
         const androidId = req.params.id;
+        const albumId = "album" + androidId;
 
         console.log(req.body);
         
@@ -50,7 +51,23 @@ router.post("/:id/:title", async (req, res) => {
 
         var resJson = new Array();
 
-        //사진 삭제
+        /*
+        //첫 생성시 앨범 목록에 추가
+        const albumsave = await mongoose.model(albumId, albumSchema, albumId).findOneAndUpdate({
+            title: req.params.title,
+        }, {
+            $setOnInsert: {
+                title: req.params.title,
+                albumTumbnail: photos[0].uri,
+                albumType: "dateAlbum",
+            }
+        }, {
+            upsert: true,
+            new: true,
+        });
+        console.log("앨범 저장: ", albumsave);*/
+
+        //사진 삭제(고쳐야함)
         for(idx in deletedList){
             await mongoose.model(androidId, photoSchema, androidId).deleteOne({
                 _id: deletedList._id,
@@ -61,30 +78,36 @@ router.post("/:id/:title", async (req, res) => {
         for(idx in photos){
             console.log(idx, ": ", photos[idx]);
             const photo = photos[idx];
+            var result;
 
-            var datetime; 
-            try {
-                datetime = new Date(photo.datetime);
-            } catch (error) {
-                console.log(error);
-            };
+            if(photo._id) {
+                result = await mongoose.model(androidId, photoSchema, androidId).findOneAndUpdate({
+                    _id: photo._id 
+                }, {
+                    $set: {
+                        comment: photo.comment,
+                        page: photo.page,
+                    }
+                }, {
+                    new: true
+                });
+            }
+            else {
+                var datetime; 
+                try {
+                    datetime = new Date(photo.datetime);
+                } catch (error) {
+                    console.log(error);
+                };
 
-            var result = await mongoose.model(androidId, photoSchema, androidId).findOneAndUpdate({
-                _id: photo._id
-            }, {
-                $set: {
-                    comment: photo.comment,
-                    page: photo.page,
-                },
-                $setOnInsert: {
+                result = await mongoose.model(androidId, photoSchema, androidId).create({
                     uri: photo.uri,
                     datetime: datetime,
                     location: photo.location,
-                }
-            }, {
-                upsert: true,
-                new: true
-            });
+                    comment: photo.comment,
+                    page: photo.page,
+                });
+            }
             console.log("result : ", result);
             resJson.push(result);
         };

@@ -12,6 +12,8 @@ const album = new Schema({
         enum: ["dateAlbum", "customAlbum"]
     },
     imgCount: Number,
+}, {
+    timestamps : true
 });
 
 module.exports = album;

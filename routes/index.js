@@ -46,25 +46,16 @@ router.post("/:id/:title", async (req, res) => {
         console.log(req.body);
         
         //사진들
+        const album = req.body.album;
         const photos = req.body.photos;
         const deletedList = req.body.deletedList;
 
         var resJson = new Array();
         
-        //첫 생성시 앨범 목록에 추가
-        const albumsave = await mongoose.model(albumId, albumSchema, albumId).findOneAndUpdate({
-            title: req.params.title,
-        }, {
-            $setOnInsert: {
-                title: req.params.title,
-                albumTumbnail: photos[0].uri,
-                albumType: "dateAlbum",
-            }
-        }, {
-            upsert: true,
-            new: true,
-        });
-        console.log("앨범 : ", albumsave);
+        //앨범
+        if(!album.thumbnail){
+            album.thumbnail = photos[0].uri;
+        }
 
         //사진 삭제
         for(idx in deletedList){
@@ -104,6 +95,7 @@ router.post("/:id/:title", async (req, res) => {
                     datetime: datetime,
                     location: photo.location,
                     comment: photo.comment,
+                    album: album,
                     page: photo.page,
                 });
             }

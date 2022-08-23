@@ -9,9 +9,22 @@ const router = express.Router();
 router.get("/:id", async (req, res) => {
     try {
         const androidId = req.params.id;
-        const albumId = "album" + androidId;
 
-        const result = await mongoose.model(albumId, albumSchema, albumId).find({});
+        const result = await mongoose.model(androidId, photoSchema, androidId).aggregate([
+            {
+                $match: {
+                    "album.type": "dateAlbum"
+                }
+            }, {
+                $group: { 
+                    _id: {
+                        type: "$album.type",
+                        title: "$album.title",
+                        thumbnail: "$album.thumbnail"
+                    }
+                } 
+            }
+        ]);
 
         console.log(result);
 
@@ -25,9 +38,10 @@ router.get("/:id", async (req, res) => {
 router.get("/:id/:title", async (req, res) => {
     try{
         const androidId = req.params.id;
+        console.log(req.params.title);
 
         const result = await mongoose.model(androidId, photoSchema, androidId).find({
-            "page.albumTitle": req.params.title
+            "album.title": req.params.title,
         });
         console.log(result);
         res.json(result);
@@ -76,6 +90,7 @@ router.post("/:id/:title", async (req, res) => {
                 }, {
                     $set: {
                         comment: photo.comment,
+                        album: album,
                         page: photo.page,
                     }
                 }, {
@@ -86,8 +101,10 @@ router.post("/:id/:title", async (req, res) => {
                 var datetime; 
                 try {
                     datetime = new Date(photo.datetime);
-                } catch (error) {
-                    console.log(error);
+                    if (datetime == "Invalid Date") datetime = new Date();
+                } catch (err) {
+                    console.log(err);
+                    datetime = new Date();
                 };
 
                 result = await mongoose.model(androidId, photoSchema, androidId).create({

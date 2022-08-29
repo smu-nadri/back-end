@@ -1,7 +1,6 @@
 const express = require("express");
 const photoSchema = require("../schemas/photo");
 const tagSchema = require("../schemas/tags");
-const albumSchema = require("../schemas/album");
 const mongoose = require("mongoose");
 const router = express.Router();
 
@@ -10,7 +9,28 @@ router.get("/:id", async (req, res) => {
     try {
         const androidId = req.params.id;
 
-        const result = await mongoose.model(androidId, photoSchema, androidId).aggregate([
+        const customAlbums = await mongoose.model(androidId, photoSchema, androidId).aggregate([
+            {
+                $match: {
+                    "album.type": "customAlbum"
+                }
+            }, {
+                $group: { 
+                    _id: {
+                        type: "$album.type",
+                        title: "$album.title",
+                        thumbnail: "$album.thumbnail"
+                    }
+                } 
+            }, {
+                $sort: {
+                    "_id.title": -1
+                }
+            }
+        ]);
+        console.log(customAlbums);
+
+        const dateAlbums = await mongoose.model(androidId, photoSchema, androidId).aggregate([
             {
                 $match: {
                     "album.type": "dateAlbum"
@@ -23,14 +43,51 @@ router.get("/:id", async (req, res) => {
                         thumbnail: "$album.thumbnail"
                     }
                 } 
+            }, {
+                $sort: {
+                    "_id.title": -1
+                }
             }
         ]);
+        console.log(dateAlbums);
 
-        console.log(result);
+        let years = [];
+        let yearAlbums = []; 
+        let months = [];
+        let monthAlbums = [];
 
-        res.json({"resJson": result});
+        dateAlbums.forEach((e, i) => {
+            let date = e._id.title.split("-");
+            if(!years.includes(date[0])) {
+                years.push(date[0]);
+                yearAlbums.push({
+                    title: date[0],
+                    thumbnail: e._id.thumbnail
+                });
+            }
+            if(!months.includes(date[0]+"-"+date[1])){
+                months.push(date[0]+"-"+date[1]);
+                monthAlbums.push({
+                    title: date[0]+"-"+date[1],
+                    thumbnail: e._id.thumbnail
+                });
+            }
+            console.log(yearAlbums, monthAlbums);
+
+        });
+
+        var resJson = {
+            "customAlbums" : customAlbums,
+            "dateAlbums" : dateAlbums,
+            "yearAlbums" : yearAlbums,
+            "monthAlbums" : monthAlbums
+        };
+
+        res.json(resJson);
+
     } catch (err) {
         console.error(err);
+        res.json("ERROR");
     }
 })
 
@@ -41,7 +98,10 @@ router.get("/:id/:title", async (req, res) => {
         console.log(req.params.title);
 
         const result = await mongoose.model(androidId, photoSchema, androidId).find({
-            "album.title": req.params.title,
+            "album.title": { $regex : req.params.title },
+        }).sort({
+            "album.title" : 1,
+            "page.layoutOrder" : 1
         });
         console.log(result);
         res.json(result);
@@ -130,9 +190,27 @@ router.post("/:id/:title", async (req, res) => {
 
 router.get("/:id/search", async (req, res) => {
     const androidId = req.params.id;
-    const albumId = androidId+"album";
-    const query = req.query;
+    const query = req.query.query;
     console.log(query);
+
+    const tagResult = await mongoose.model(androidId, photoSchema, androidId).find({
+        "tags": { $elemMatch: query },
+    });
+    
+    const commentResult = await mongoose.model(androidId, photoSchema, androidId).find({
+        "comment": { $regex: query },
+    });
+
+    const addressResult = await mongoose.model(androidId, photoSchema, androidId).find({
+        "location.address": { $regex: query },
+    });
+
+    const albumResult = await mongoose.model(androidId, photoSchema, androidId).find({
+        "album.title": { $regex: query },
+    });
+
+    //얼굴, 날짜
+
 })
 
 module.exports = router;

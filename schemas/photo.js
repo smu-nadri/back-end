@@ -27,10 +27,19 @@ const photo = new Schema({
     comment: {
         type: String
     },
-    page: {
-        albumTitle: {
+    album: {
+        title: {
             type: String
         },
+        type: {
+            type: String,
+            enum: ["dateAlbum", "customAlbum"]
+        },
+        thumbnail: {
+            type: String,
+        }
+    },
+    page: {
         pageOrder: {
             type: Number
         },

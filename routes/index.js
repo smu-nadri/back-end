@@ -2,6 +2,7 @@ const express = require("express");
 const photoSchema = require("../schemas/photo");
 const tagSchema = require("../schemas/tags");
 const mongoose = require("mongoose");
+const photo = require("../schemas/photo");
 const router = express.Router();
 
 //앨범 목록 보내주기
@@ -166,12 +167,14 @@ router.post("/:id/:title", async (req, res) => {
                     console.log(err);
                     datetime = new Date();
                 };
+                console.log(photo.tags);
 
                 result = await mongoose.model(androidId, photoSchema, androidId).create({
                     uri: photo.uri,
                     datetime: datetime,
                     location: photo.location,
                     comment: photo.comment,
+                    tags: photo.tags,
                     album: album,
                     page: photo.page,
                 });
@@ -210,6 +213,15 @@ router.get("/:id/search", async (req, res) => {
     });
 
     //얼굴, 날짜
+
+    const tagList = await mongoose.model(androidId, photoSchema.androidId).aggregate([
+        {
+            $group: {
+                _id: "$uri",
+                
+            }
+        }
+    ]);
 
 })
 

@@ -29,7 +29,7 @@ router.get("/:id", async (req, res) => {
                 }
             }
         ]);
-        console.log(customAlbums);
+        //console.log(customAlbums);
 
         const dateAlbums = await mongoose.model(androidId, photoSchema, androidId).aggregate([
             {
@@ -50,7 +50,7 @@ router.get("/:id", async (req, res) => {
                 }
             }
         ]);
-        console.log(dateAlbums);
+        //console.log(dateAlbums);
 
         let years = [];
         let yearAlbums = []; 
@@ -88,9 +88,107 @@ router.get("/:id", async (req, res) => {
 
     } catch (err) {
         console.error(err);
+        res.status(500);
         res.json("ERROR");
     }
 })
+
+//검색 결과 보내주기
+router.get("/:id/search", async (req, res) => {
+    try{
+        const androidId = req.params.id;
+        const query = req.query.query;
+        console.log(query);
+
+        const tagResult = await mongoose.model(androidId, photoSchema, androidId).find({
+            $or: [
+                { tags: { $elemMatch: { tag_en: { $regex: `^${query}$`, $options: "i" } } } },
+                { tags: { $elemMatch: { tag_ko1: query } } }, 
+                { tags: { $elemMatch: { tag_ko2: query } } },
+                { tags: { $elemMatch: { tag_koe: query } } },
+            ]
+        });
+        
+        const commentResult = await mongoose.model(androidId, photoSchema, androidId).find({
+            "comment": { $regex: query },
+        });
+
+        const addressResult = await mongoose.model(androidId, photoSchema, androidId).find({
+            "location.address": { $regex: query },
+        });
+
+        const albumResult = await mongoose.model(androidId, photoSchema, androidId).find({
+            "album.title": { $regex: query },
+        });
+
+        //얼굴, 날짜
+
+        var resJson = {
+            "tagResult": tagResult,
+            "comentResult": commentResult,
+            "addressResult": addressResult,
+            "albumResult": albumResult,
+        };
+
+        console.log(resJson);
+
+        res.json(resJson);
+
+    } catch(err){
+        console.log(err);
+        res.status(500);
+        res.json({ "resJson": "ERROR" });
+    }
+})
+
+//태그 목록 보내주기
+router.get("/:id/search/taglist", async(req, res) => {
+    try{
+        const androidId = req.params.id;
+        const tagList = await mongoose.model(androidId, photoSchema, androidId).aggregate([
+            {
+                $unwind: {
+                    path: "$tags"
+                }
+            }, {
+                $group: {
+                    _id: "$tags",
+                    tag: {
+                        $first: {
+                            tag: "$tags",
+                            thumbnail: "$uri"
+                        }
+                    }
+                }
+            }
+        ]);
+        console.log(tagList);
+
+        res.json({ "tagList": tagList });
+
+    } catch(err){
+        console.log(err);
+        res.status(500);
+        res.json({ "resJson": "ERROR" });
+    }
+});
+
+//클릭한 태그가 달린 사진들 보내주기
+router.get("/:id/search/:tagidx", async(req, res) => {
+    try{
+        const androidId = req.params.id;
+        const result = await mongoose.model(androidId, photoSchema, androidId).find({
+            "tags": { $elemMatch: { _id: req.params.tagidx } },
+        });
+
+        res.json(result);
+
+    } catch(err){
+        console.log(err);
+        res.status(500);
+        res.json({ "resJson": "ERROR" });
+    }
+});
 
 //해당 앨범의 사진들 보내주기
 router.get("/:id/:title", async (req, res) => {
@@ -109,6 +207,8 @@ router.get("/:id/:title", async (req, res) => {
 
     } catch(err) {
         console.error(err);
+        res.status(500);
+        res.json({ "resJson" : "ERROR" });
     }
 });
 
@@ -183,46 +283,13 @@ router.post("/:id/:title", async (req, res) => {
             resJson.push(result);
         };
 
-        res.json({"resJson": resJson});
+        res.json({ "resJson": resJson });
     
     } catch(err) {
         console.log(err);
-        res.json({"resJson": "ERROR"});
+        res.status(500);
+        res.json({ "resJson": "ERROR" });
     }
 });
-
-router.get("/:id/search", async (req, res) => {
-    const androidId = req.params.id;
-    const query = req.query.query;
-    console.log(query);
-
-    const tagResult = await mongoose.model(androidId, photoSchema, androidId).find({
-        "tags": { $elemMatch: query },
-    });
-    
-    const commentResult = await mongoose.model(androidId, photoSchema, androidId).find({
-        "comment": { $regex: query },
-    });
-
-    const addressResult = await mongoose.model(androidId, photoSchema, androidId).find({
-        "location.address": { $regex: query },
-    });
-
-    const albumResult = await mongoose.model(androidId, photoSchema, androidId).find({
-        "album.title": { $regex: query },
-    });
-
-    //얼굴, 날짜
-
-    const tagList = await mongoose.model(androidId, photoSchema.androidId).aggregate([
-        {
-            $group: {
-                _id: "$uri",
-                
-            }
-        }
-    ]);
-
-})
 
 module.exports = router;

@@ -6,7 +6,7 @@ const album = new Schema({
         type: String,
         unique: true,
     },
-    albumTumbnail: String,
+    albumThumbnail: String,
     albumType: {
         type: String,
         enum: ["dateAlbum", "customAlbum"]

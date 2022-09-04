@@ -123,10 +123,14 @@ router.get("/:id/search", async (req, res) => {
 
         //얼굴, 날짜
 
+        var photoResult = [
+            ...tagResult,
+            ...commentResult,
+            ...addressResult
+        ];
+
         var resJson = {
-            "tagResult": tagResult,
-            "comentResult": commentResult,
-            "addressResult": addressResult,
+            "photoResult": photoResult,
             "albumResult": albumResult,
         };
 

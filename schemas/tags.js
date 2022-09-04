@@ -3,11 +3,17 @@ const mongoose = require('mongoose');
 const {Schema} = mongoose;
 const tags = new Schema({
     userID: String,
-    tag1: {
+    _id: {
         type: Number,
-        default: 0
+        unique: true,
     },
-    tag2: {
+    name_en: {
+        type: String
+    },
+    name_ko: {
+        type: String
+    },
+    cnt: {
         type: Number,
         default: 0
     }

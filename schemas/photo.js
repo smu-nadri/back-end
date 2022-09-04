@@ -16,12 +16,7 @@ const photo = new Schema({
     },
     tags: [
         { 
-            tag: {
-                type: String
-            },
-            obj: {
-                type: String
-            }
+            type: Object,
         }
     ],
     comment: {

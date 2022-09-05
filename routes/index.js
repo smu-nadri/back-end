@@ -117,9 +117,20 @@ router.get("/:id/search", async (req, res) => {
             "location.address": { $regex: query },
         });
 
-        const albumResult = await mongoose.model(androidId, photoSchema, androidId).find({
-            "album.title": { $regex: query },
-        });
+        const albumResult = await mongoose.model(androidId, photoSchema, androidId).aggregate([
+            {
+                $match: { "album.title": { $regex: query } },
+            }, {
+                $group: {
+                    _id: "$album.title",
+                    title: { $first: "$album.title" },
+                    type: { $first: "$album.type" },
+                    thumbnail: { $first: "$album.thumbnail" },
+                }
+            }, {
+                $project: { _id : 0 }
+            }
+        ]);
 
         //얼굴, 날짜
 

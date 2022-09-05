@@ -32,6 +32,12 @@ jobs:
         with:
           name: node-app
           path: .
+          
+      - name : Create .env File
+        run : |
+          touch .env
+          echo MONGO_URI=${{ secrets.MONGO_URI }} >> .env
+          cat .env
 
   deploy:
     runs-on: ubuntu-latest

@@ -39,7 +39,8 @@ const photo = new Schema({
             type: Number
         },
         layoutOrder: {
-            type: Number
+            type: Number,
+            index: true,
         }
     },  
 }, {

@@ -214,7 +214,6 @@ router.get("/:id/:title", async (req, res) => {
         const result = await mongoose.model(androidId, photoSchema, androidId).find({
             "album.title": { $regex : req.params.title },
         }).sort({
-            "album.title" : 1,
             "page.layoutOrder" : 1
         });
         console.log(result);

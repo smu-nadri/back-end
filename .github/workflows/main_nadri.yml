@@ -32,12 +32,6 @@ jobs:
         with:
           name: node-app
           path: .
-          
-      - name : Create .env File
-        run : |
-          touch .env
-          echo MONGO_URI=${{ secrets.MONGO_URI }} >> .env
-          cat .env
 
   deploy:
     runs-on: ubuntu-latest
@@ -58,5 +52,5 @@ jobs:
         with:
           app-name: 'nadri'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DADCDF96B31C44BBB3E81D8BA15CCD14 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9EBE9C77F29D4CCC88C6265036CE9A74 }}
           package: .

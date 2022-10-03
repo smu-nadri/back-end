@@ -2,8 +2,11 @@ const express = require("express");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 
-const indexRouter = require("./routes");
 const connect = require("./schemas");
+const indexRouter = require("./routes/index");
+const albumRouter = require("./routes/album");
+const searchRouter = require("./routes/search");
+const highlightRouter = require("./routes/highlight");
 
 dotenv.config();
 
@@ -12,7 +15,11 @@ app.set("port", process.env.PORT || 8080);
 
 app.use(morgan("dev"));
 app.use(express.json());
+
 app.use("/", indexRouter);
+app.use("/api/album", albumRouter);
+app.use("/api/search", searchRouter);
+app.use("/api/highlight", highlightRouter);
 
 connect();
 

@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const {Schema} = mongoose;
 const photo = new Schema({
+    userId: {
+        type: String,
+        index: true
+    },
     uri: {
         type: String
     },

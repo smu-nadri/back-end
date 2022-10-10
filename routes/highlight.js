@@ -14,33 +14,99 @@ router.get("/:id", async (req, res) => {
         let toDayPick = Math.floor(Math.random() * value.length);
         console.log("toDayPick : ", toDayPick, " ", value[toDayPick]);
 
+        toDayPick = 0;
         switch (toDayPick) {
             case 0:
-                //날짜 하이라이트는 좀 더 생각해보자
-                const dateList = await mongoose.model("photos", photoSchema, "photos").aggregate([
-                    { $match : { userId: androidId } },
-                    {
-                        $group: {
-                            _id: {
-                                year: { "$year": "$datetime" },
-                                month: { "$month":"$datetime" }
-                            }
-                        }
+                //작년
+                let lastday = new Date();
+                lastday.setFullYear(lastday.getFullYear() - 1);
+                let year = lastday.getFullYear();
+                let month = lastday.getMonth() + 1;
+                let day = lastday.getDate();
+                const lastyear = await mongoose.model("photos", photoSchema, "photos").find({
+                    $expr: {
+                        $and: [
+                            { userId: androidId },
+                            { $eq: [ { "$year": "$datetime" }, year ] },
+                            { $eq: [ { "$month": "$datetime" }, month ] },
+                            { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
+                        ]
                     }
-                ]);
-                if(dateList != 0){
-                    let datePick = Math.floor(Math.random() * dateList.length);
-                    console.log("list", dateList[datePick]);
-                    resArr = await mongoose.model("photos", photoSchema, "photos").find({
+                });
+
+                if(lastyear.length == 0){
+                    //저번달
+                    lastday = new Date();
+                    lastday.setMonth(lastday.getMonth() - 1);
+                    year = lastday.getFullYear();
+                    month = lastday.getMonth() + 1;
+                    day = lastday.getDate();
+                    const lastmonth = await mongoose.model("photos", photoSchema, "photos").find({
                         $expr: {
                             $and: [
                                 { userId: androidId },
-                                { $eq: [ { "$year": "$datetime" }, dateList[datePick]._id.year ] },
-                                { $eq: [ { "$month": "$datetime" }, dateList[datePick]._id.month ] }
+                                { $eq: [ { "$year": "$datetime" }, year ] },
+                                { $eq: [ { "$month": "$datetime" }, month ] },
+                                { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
                             ]
                         }
                     });
-                    console.log("result", resArr);
+
+                    if(lastmonth.length == 0){
+                        //지난주
+                        lastday = new Date();
+                        lastday.setDate(lastday.getDate() - 7);
+                        year = lastday.getFullYear();
+                        month = lastday.getMonth() + 1;
+                        day = lastday.getDate();
+                        const lastweek = await mongoose.model("photos", photoSchema, "photos").find({
+                            $expr: {
+                                $and: [
+                                    { userId: androidId },
+                                    { $eq: [ { "$year": "$datetime" }, year ] },
+                                    { $eq: [ { "$month": "$datetime" }, month ] },
+                                    { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
+                                ]
+                            }
+                        });
+
+                        if(lastweek.length == 0){
+                            //랜덤 날짜
+                            let today = new Date();
+                            month = today.getMonth() + 1;
+                            const dateList = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                                { $match : { 
+                                    $and : [
+                                        { userId: '4f69a1e89104426c' },
+                                        { "$expr" : {$lt : [{ "$month": "$datetime" }, month ]}}
+                                    ] 
+                                }},
+                                {
+                                    $group: {
+                                        _id: {
+                                            year: { "$year": "$datetime" },
+                                            month: { "$month":"$datetime" }
+                                        }
+                                    }
+                                }
+                            ]);
+        
+                            if(dateList != 0){
+                                let datePick = Math.floor(Math.random() * dateList.length);
+                                console.log("list", dateList[datePick]);
+                                resArr = await mongoose.model("photos", photoSchema, "photos").find({
+                                    $expr: {
+                                        $and: [
+                                            { userId: androidId },
+                                            { $eq: [ { "$year": "$datetime" }, dateList[datePick]._id.year ] },
+                                            { $eq: [ { "$month": "$datetime" }, dateList[datePick]._id.month ] }
+                                        ]
+                                    }
+                                });
+                                console.log("result", resArr);
+                            }
+                        }
+                    }
                 }
                 break;
             case 1:

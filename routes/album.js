@@ -137,7 +137,7 @@ router.post("/:title/:id", async (req, res) => {
             const photo = photos[idx];
             var result;
 
-            if(photo._id) {
+            if(photo._id) { //수정
                 result = await mongoose.model("photos", photoSchema, "photos").findOneAndUpdate({
                     _id: photo._id 
                 }, {
@@ -150,9 +150,9 @@ router.post("/:title/:id", async (req, res) => {
                     new: true
                 });
             }
-            else {
+            else {  //생성
                 var datetime; 
-                try {
+                try {   //날짜 예외처리
                     datetime = new Date(photo.datetime);
                     if (datetime == "Invalid Date") datetime = new Date();
                 } catch (err) {
@@ -171,6 +171,64 @@ router.post("/:title/:id", async (req, res) => {
                     album: album,
                     page: photo.page,
                 });
+
+                if(album.type == "customAlbum"){
+                    let photoday = new Date(datetime);
+                    let year = photoday.getFullYear();
+                    let month =  ('0' + (photoday.getMonth() + 1)).slice(-2);
+                    let day = ('0' + photoday.getDate()).slice(-2);
+                    let dateAlbum_title = year + "-" + month + "-" + day;
+
+                    //사진이 이미 달력앨범에 있는지 확인
+                    const find_dateAlbum = await mongoose.model("photo", photoSchema, "photos").findOne({
+                        userId: androidId,
+                        uri: photo.uri,
+                        "album.title": { $regex : dateAlbum_title },
+                    });
+
+                    if(find_dateAlbum == null){ //사진이 달력앨범에 없으면
+                        //해당 날짜의 달력앨범이 있는지 확인
+                        const dateAlbum_info = await mongoose.model("photo", photoSchema, "photos").findOne({
+                            userId: androidId,
+                            "album.title": { $regex : dateAlbum_title },
+                            uri: photo.uri
+                        }, { 
+                            album: 1, page: 1 
+                        }).sort({
+                            "page.layoutOrder" : -1
+                        });
+
+                        if(dateAlbum_info == null){ //해당하는 달력앨범이 없으면 새로 앨범 만들기
+                            var auto_dateAlbum = await mongoose.model("photos", photoSchema, "photos").create({
+                                userId: photo.userId,
+                                uri: photo.uri,
+                                datetime: datetime,
+                                location: photo.location,
+                                comment: photo.comment,
+                                tags: photo.tags,
+                                "album.title": dateAlbum_title,
+                                "album.type" : "dateAlbum",
+                                "album.thumbnail" : photo.uri,
+                                "page.pageOrder" : 1,
+                                "page.layoutOrder": 0,
+                            });
+                        }
+                        else {  //해당하는 달력앨범이 있으면 다음 순서에 이어서 저장
+                            var auto_dateAlbum = await mongoose.model("photos", photoSchema, "photos").create({
+                                userId: photo.userId,
+                                uri: photo.uri,
+                                datetime: datetime,
+                                location: photo.location,
+                                comment: photo.comment,
+                                tags: photo.tags,
+                                album: dateAlbum_info.album,
+                                "page.pageOrder" : 1,
+                                "page.layoutOrder": (dateAlbum_info.page.layoutOrder + 1),
+                            });
+                            
+                        }
+                    }
+                }
             }
             console.log("result : ", result);
             resJson.push(result);

@@ -8,7 +8,7 @@ router.get("/:id", async (req, res) => {
     try{
         const androidId = req.params.id;
 
-        let resArr;
+        let resArr = [];
 
         let value = ["date", "location", "tag"];
         let toDayPick = Math.floor(Math.random() * value.length);

@@ -9,12 +9,12 @@ router.get("/:id", async (req, res) => {
         const androidId = req.params.id;
 
         let resArr = [];
+        let title = "";
 
         let value = ["date", "location", "tag"];
         let toDayPick = Math.floor(Math.random() * value.length);
         console.log("toDayPick : ", toDayPick, " ", value[toDayPick]);
 
-        toDayPick = 0;
         switch (toDayPick) {
             case 0:
                 //작년
@@ -23,6 +23,7 @@ router.get("/:id", async (req, res) => {
                 let year = lastday.getFullYear();
                 let month = lastday.getMonth() + 1;
                 let day = lastday.getDate();
+
                 const lastyear = await mongoose.model("photos", photoSchema, "photos").find({
                     $expr: {
                         $and: [
@@ -34,6 +35,9 @@ router.get("/:id", async (req, res) => {
                     }
                 });
 
+                title = "작년";
+                resArr = lastyear;
+
                 if(lastyear.length == 0){
                     //저번달
                     lastday = new Date();
@@ -41,6 +45,7 @@ router.get("/:id", async (req, res) => {
                     year = lastday.getFullYear();
                     month = lastday.getMonth() + 1;
                     day = lastday.getDate();
+
                     const lastmonth = await mongoose.model("photos", photoSchema, "photos").find({
                         $expr: {
                             $and: [
@@ -52,6 +57,9 @@ router.get("/:id", async (req, res) => {
                         }
                     });
 
+                    title = "지난달";
+                    resArr = lastmonth;
+
                     if(lastmonth.length == 0){
                         //지난주
                         lastday = new Date();
@@ -59,6 +67,7 @@ router.get("/:id", async (req, res) => {
                         year = lastday.getFullYear();
                         month = lastday.getMonth() + 1;
                         day = lastday.getDate();
+
                         const lastweek = await mongoose.model("photos", photoSchema, "photos").find({
                             $expr: {
                                 $and: [
@@ -69,6 +78,9 @@ router.get("/:id", async (req, res) => {
                                 ]
                             }
                         });
+
+                        title = "지난주";
+                        resArr = lastweek;
 
                         if(lastweek.length == 0){
                             //랜덤 날짜
@@ -93,7 +105,8 @@ router.get("/:id", async (req, res) => {
         
                             if(dateList != 0){
                                 let datePick = Math.floor(Math.random() * dateList.length);
-                                console.log("list", dateList[datePick]);
+                                
+                                title = dateList[datePick];
                                 resArr = await mongoose.model("photos", photoSchema, "photos").find({
                                     $expr: {
                                         $and: [
@@ -103,7 +116,10 @@ router.get("/:id", async (req, res) => {
                                         ]
                                     }
                                 });
-                                console.log("result", resArr);
+                            }
+                            else {
+                                title = "";
+                                resArr = [];
                             }
                         }
                     }
@@ -117,11 +133,11 @@ router.get("/:id", async (req, res) => {
                 if(locationList != 0){
                     let locationPick = Math.floor(Math.random() * locationList.length);
 
+                    title = locationList[locationPick];
                     resArr = await mongoose.model("photos", photoSchema, "photos").find({
                         userId: androidId,
                         [district[dPick]] : locationList[locationPick]
                     });
-                    console.log(resArr);
                 }
                 break;
             case 2:
@@ -129,17 +145,18 @@ router.get("/:id", async (req, res) => {
                 if(tagList != 0){
                     let tagPick = Math.floor(Math.random() * tagList.length);
 
+                    title = tagList[tagPick];
                     //또는 _id로 찾기
                     resArr = await mongoose.model("photos", photoSchema, "photos").find({
                         userId: androidId,
                         tags: tagList[tagPick]
                     }); 
-                    console.log(resArr);
                 }
                 break;
         }
 
-        res.json(resArr);
+        console.log("title : ", title, "\nresArr : ",  resArr);
+        res.json({ "title" : title, "resArr" : resArr });
 
     } catch (err){
         console.error(err);

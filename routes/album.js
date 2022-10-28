@@ -93,7 +93,7 @@ router.get("/:title/:id", async (req, res) => {
             userId: androidId,
             "album.title": { $regex : req.params.title },
         }).sort({
-            "page.layoutOrder" : 1
+            layoutOrder : 1
         });
         console.log(result);
         res.json(result);
@@ -116,6 +116,7 @@ router.post("/:title/:id", async (req, res) => {
         const album = req.body.album;
         const photos = req.body.photos;
         const deletedList = req.body.deletedList;
+        const initFaceList = req.body.initFaceList;
 
         var resJson = new Array();
         
@@ -127,8 +128,21 @@ router.post("/:title/:id", async (req, res) => {
         //사진 삭제
         for(idx in deletedList){
             await mongoose.model("photos", photoSchema, "photos").deleteOne({
-                _id: deletedList._id,
+                _id: deletedList[idx]._id,
             })
+        }
+
+        //얼굴 업데이트
+        for(idx in initFaceList){
+            let face = initFaceList[idx];
+            let label = Object.keys(face)[0];
+            let name = face[label];
+
+            await mongoose.model("photos", photoSchema, "photos").updateMany(
+                { faces: { $elemMatch: { "label": label } } }, 
+                { $set: { "faces.$[i].label": name } },
+                { arrayFilters: [ { "i.label": label } ], multi: true }
+            )
         }
         
         //사진 생성 및 수정
@@ -145,6 +159,7 @@ router.post("/:title/:id", async (req, res) => {
                         comment: photo.comment,
                         album: album,
                         page: photo.page,
+                        faces: photo.faces,
                     }
                 }, {
                     new: true
@@ -168,8 +183,9 @@ router.post("/:title/:id", async (req, res) => {
                     location: photo.location,
                     comment: photo.comment,
                     tags: photo.tags,
+                    faces: photo.faces,
                     album: album,
-                    page: photo.page,
+                    layoutOrder: photo.layoutOrder,
                 });
 
                 if(album.type == "customAlbum"){
@@ -195,7 +211,7 @@ router.post("/:title/:id", async (req, res) => {
                         }, { 
                             album: 1, page: 1 
                         }).sort({
-                            "page.layoutOrder" : -1
+                            layoutOrder : -1
                         });
 
                         if(dateAlbum_info == null){ //해당하는 달력앨범이 없으면 새로 앨범 만들기
@@ -206,11 +222,11 @@ router.post("/:title/:id", async (req, res) => {
                                 location: photo.location,
                                 comment: photo.comment,
                                 tags: photo.tags,
+                                faces: photo.faces,
                                 "album.title": dateAlbum_title,
                                 "album.type" : "dateAlbum",
                                 "album.thumbnail" : photo.uri,
-                                "page.pageOrder" : 1,
-                                "page.layoutOrder": 0,
+                                layoutOrder: 0,
                             });
                         }
                         else {  //해당하는 달력앨범이 있으면 다음 순서에 이어서 저장
@@ -221,9 +237,9 @@ router.post("/:title/:id", async (req, res) => {
                                 location: photo.location,
                                 comment: photo.comment,
                                 tags: photo.tags,
+                                faces: photo.faces,
                                 album: dateAlbum_info.album,
-                                "page.pageOrder" : 1,
-                                "page.layoutOrder": (dateAlbum_info.page.layoutOrder + 1),
+                                layoutOrder: (dateAlbum_info.page.layoutOrder + 1),
                             });
                             
                         }

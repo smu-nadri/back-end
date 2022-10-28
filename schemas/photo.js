@@ -15,12 +15,21 @@ const photo = new Schema({
     location: {
         type: Object    
     },
-    thumbnail: {
-        type: String
-    },
     tags: [
         { 
             type: Object,
+        }
+    ],
+    faces: [
+        {
+            id: Number,
+            label: String,
+            distance: Number,
+            embeeding: String,
+            left: Number,
+            top: Number,
+            right: Number,
+            bottom: Number
         }
     ],
     comment: {
@@ -38,14 +47,9 @@ const photo = new Schema({
             type: String,
         }
     },
-    page: {
-        pageOrder: {
-            type: Number
-        },
-        layoutOrder: {
-            type: Number,
-            index: true,
-        }
+    layoutOrder: {
+        type: Number,
+        index: true,
     },  
 }, {
     timestamps: true,

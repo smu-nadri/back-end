@@ -7,6 +7,7 @@ const indexRouter = require("./routes/index");
 const albumRouter = require("./routes/album");
 const searchRouter = require("./routes/search");
 const highlightRouter = require("./routes/highlight");
+const statsRouter = require("./routes/stats");
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use("/", indexRouter);
 app.use("/api/album", albumRouter);
 app.use("/api/search", searchRouter);
 app.use("/api/highlight", highlightRouter);
+app.use("/api/stats", statsRouter);
 
 connect();
 

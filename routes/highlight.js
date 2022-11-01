@@ -89,7 +89,7 @@ router.get("/:id", async (req, res) => {
                             const dateList = await mongoose.model("photos", photoSchema, "photos").aggregate([
                                 { $match : { 
                                     $and : [
-                                        { userId: '4f69a1e89104426c' },
+                                        { userId: androidId },
                                         { "$expr" : {$lt : [{ "$month": "$datetime" }, month ]}}
                                     ] 
                                 }},
@@ -106,7 +106,7 @@ router.get("/:id", async (req, res) => {
                             if(dateList != 0){
                                 let datePick = Math.floor(Math.random() * dateList.length);
                                 
-                                title = dateList[datePick];
+                                title = dateList[datePick].year + "년 " + dateList[datePick].year + "월";
                                 resArr = await mongoose.model("photos", photoSchema, "photos").find({
                                     $expr: {
                                         $and: [
@@ -145,7 +145,7 @@ router.get("/:id", async (req, res) => {
                 if(tagList != 0){
                     let tagPick = Math.floor(Math.random() * tagList.length);
 
-                    title = tagList[tagPick];
+                    title = tagList[tagPick].tag_ko1;
                     //또는 _id로 찾기
                     resArr = await mongoose.model("photos", photoSchema, "photos").find({
                         userId: androidId,

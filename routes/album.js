@@ -3,10 +3,28 @@ const photoSchema = require("../schemas/photo");
 const mongoose = require("mongoose");
 const router = express.Router();
 
+router.get("/all/:id", async (req, res) => {
+    try {
+        const androidId = req.params.id;
+
+        const all = await mongoose.model("photos", photoSchema, "photos").find({ "userId": androidId }).sort({ datetime: -1 });
+
+        var resJson = { "all" : all };
+
+        res.json(resJson);
+    } catch (err) {
+        console.error(err);
+        res.status(500);
+        res.json("ERROR");
+    }
+})
+
 //앨범 목록 보내주기
 router.get("/:id", async (req, res) => {
     try {
         const androidId = req.params.id;
+
+        const thumb = await mongoose.model("photos", photoSchema, "photos").find({ "userId": androidId }).sort({ datetime: -1 }).limit(1);
 
         const customAlbums = await mongoose.model("photos", photoSchema, "photos").aggregate([
             {
@@ -68,6 +86,7 @@ router.get("/:id", async (req, res) => {
         });
 
         var resJson = {
+            "thumb" : thumb,
             "customAlbums" : customAlbums,
             "dateAlbums" : dateAlbums,
             "yearAlbums" : yearAlbums,
@@ -121,7 +140,7 @@ router.post("/:title/:id", async (req, res) => {
         var resJson = new Array();
         
         //앨범
-        if(!album.thumbnail){
+        if(Object.keys(album).length !== 0 && !album.thumbnail){
             album.thumbnail = photos[0].uri;
         }
 
@@ -158,7 +177,7 @@ router.post("/:title/:id", async (req, res) => {
                     $set: {
                         comment: photo.comment,
                         album: album,
-                        page: photo.page,
+                        layoutOrder: photo.layoutOrder,
                         faces: photo.faces,
                     }
                 }, {

@@ -10,7 +10,8 @@ const photo = new Schema({
         type: String
     },
     datetime: {
-        type: Date
+        type: Date,
+        index: true
     },
     location: {
         type: Object    

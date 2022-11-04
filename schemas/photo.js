@@ -23,14 +23,12 @@ const photo = new Schema({
     ],
     faces: [
         {
-            id: Number,
-            label: String,
-            distance: Number,
-            embeeding: String,
+            faceId: String,
+            name: String,
             left: Number,
             top: Number,
-            right: Number,
-            bottom: Number
+            width: Number,
+            height: Number
         }
     ],
     comment: {

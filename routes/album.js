@@ -103,7 +103,7 @@ router.get("/:id", async (req, res) => {
 })
 
 //해당 앨범의 페이지(사진들) 보내주기
-router.get("/:title/:id", async (req, res) => {
+router.get("/:title/:type/:id", async (req, res) => {
     try{
         const androidId = req.params.id;
         console.log(req.params.title);
@@ -114,6 +114,10 @@ router.get("/:title/:id", async (req, res) => {
         }).sort({
             layoutOrder : 1
         });
+
+        for(var i = 0; i < result.length; i++){
+            result[i].datetime = result[i].datetime.getTime();
+        }
         console.log(result);
         res.json(result);
 
@@ -124,8 +128,36 @@ router.get("/:title/:id", async (req, res) => {
     }
 });
 
+router.post("/face/:id", async (req, res) => {
+    try{
+        const androidId = req.params.id;
+
+        console.log(req.body);
+
+        const face = req.body.face;
+        const faceId = face.faceId;
+        const name = face.name;
+
+        //얼굴 업데이트
+        const result = await mongoose.model("photos", photoSchema, "photos").updateMany(
+            { faces: { $elemMatch: { "faceId": faceId } } }, 
+            { $set: { "faces.$[i].name": name } },
+            { arrayFilters: [ { "i.faceId": faceId } ], multi: true }
+        )
+
+        console.log(result);
+
+        res.json({ "resJson" : "Success" });
+
+    } catch(err) {
+        console.error(err);
+        res.status(500);
+        res.json({ "resJson" : "ERROR" });
+    }
+})
+
 //받은 페이지(사진들) 저장하기
-router.post("/:title/:id", async (req, res) => {
+router.post("/:id", async (req, res) => {
     try{
         const androidId = req.params.id;
 
@@ -150,19 +182,6 @@ router.post("/:title/:id", async (req, res) => {
                 _id: deletedList[idx]._id,
             })
         }
-
-        //얼굴 업데이트
-        for(idx in initFaceList){
-            let face = initFaceList[idx];
-            let label = Object.keys(face)[0];
-            let name = face[label];
-
-            await mongoose.model("photos", photoSchema, "photos").updateMany(
-                { faces: { $elemMatch: { "label": label } } }, 
-                { $set: { "faces.$[i].label": name } },
-                { arrayFilters: [ { "i.label": label } ], multi: true }
-            )
-        }
         
         //사진 생성 및 수정
         for(idx in photos){
@@ -178,7 +197,6 @@ router.post("/:title/:id", async (req, res) => {
                         comment: photo.comment,
                         album: album,
                         layoutOrder: photo.layoutOrder,
-                        faces: photo.faces,
                     }
                 }, {
                     new: true

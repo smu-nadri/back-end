@@ -11,9 +11,10 @@ router.get("/:id", async (req, res) => {
         let resArr = [];
         let title = "";
 
-        let value = ["date", "location", "tag"];
+        let value = ["date", "location", "tag", "face"];
         let toDayPick = Math.floor(Math.random() * value.length);
         console.log("toDayPick : ", toDayPick, " ", value[toDayPick]);
+        toDayPick = 0;
 
         switch (toDayPick) {
             case 0:
@@ -46,16 +47,32 @@ router.get("/:id", async (req, res) => {
                     month = lastday.getMonth() + 1;
                     day = lastday.getDate();
 
-                    const lastmonth = await mongoose.model("photos", photoSchema, "photos").find({
-                        $expr: {
-                            $and: [
-                                { userId: androidId },
-                                { $eq: [ { "$year": "$datetime" }, year ] },
-                                { $eq: [ { "$month": "$datetime" }, month ] },
-                                { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
-                            ]
+                    const lastmonth = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { userId: androidId },
+                                        { $eq: [ { "$year": "$datetime" }, year ] },
+                                        { $eq: [ { "$month": "$datetime" }, month ] },
+                                        { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
+                                    ]
+                                }
+                            }
+                        }, {
+                            $group: {
+                                _id: "$uri",
+                                uri: { $first: "$uri" },
+                                album: { $first: "$album" },
+                                datetime: { $first: "$datetime" },
+                                comment: { $first: "$comment" },
+                                tags: { $first: "$tags" },
+                                faces: { $first: "$faces" },
+                            }
+                        }, { 
+                            $project: { "_id": 0 } 
                         }
-                    });
+                    ]);
 
                     title = "지난달";
                     resArr = lastmonth;
@@ -68,16 +85,32 @@ router.get("/:id", async (req, res) => {
                         month = lastday.getMonth() + 1;
                         day = lastday.getDate();
 
-                        const lastweek = await mongoose.model("photos", photoSchema, "photos").find({
-                            $expr: {
-                                $and: [
-                                    { userId: androidId },
-                                    { $eq: [ { "$year": "$datetime" }, year ] },
-                                    { $eq: [ { "$month": "$datetime" }, month ] },
-                                    { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
-                                ]
+                        const lastweek = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                            {
+                                $match: {
+                                    $expr: {
+                                        $and: [
+                                            { userId: androidId },
+                                            { $eq: [ { "$year": "$datetime" }, year ] },
+                                            { $eq: [ { "$month": "$datetime" }, month ] },
+                                            { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
+                                        ]
+                                    }
+                                }
+                            }, {
+                                $group: {
+                                    _id: "$uri",
+                                    uri: { $first: "$uri" },
+                                    album: { $first: "$album" },
+                                    datetime: { $first: "$datetime" },
+                                    comment: { $first: "$comment" },
+                                    tags: { $first: "$tags" },
+                                    faces: { $first: "$faces" },
+                                }
+                            }, { 
+                                $project: { "_id": 0 } 
                             }
-                        });
+                        ]);
 
                         title = "지난주";
                         resArr = lastweek;
@@ -105,17 +138,34 @@ router.get("/:id", async (req, res) => {
         
                             if(dateList != 0){
                                 let datePick = Math.floor(Math.random() * dateList.length);
+                                console.log("dateList " + dateList[0] + " datePick: " + datePick);
                                 
-                                title = dateList[datePick].year + "년 " + dateList[datePick].year + "월";
-                                resArr = await mongoose.model("photos", photoSchema, "photos").find({
-                                    $expr: {
-                                        $and: [
-                                            { userId: androidId },
-                                            { $eq: [ { "$year": "$datetime" }, dateList[datePick]._id.year ] },
-                                            { $eq: [ { "$month": "$datetime" }, dateList[datePick]._id.month ] }
-                                        ]
+                                title = dateList[datePick]._id.year + "년 " + dateList[datePick]._id.month + "월";
+                                resArr = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $and: [
+                                                    { userId: androidId },
+                                                    { $eq: [ { "$year": "$datetime" }, dateList[datePick]._id.year ] },
+                                                    { $eq: [ { "$month": "$datetime" }, dateList[datePick]._id.month ] }
+                                                ]
+                                            }
+                                        }
+                                    }, {
+                                        $group: {
+                                            _id: "$uri",
+                                            uri: { $first: "$uri" },
+                                            album: { $first: "$album" },
+                                            datetime: { $first: "$datetime" },
+                                            comment: { $first: "$comment" },
+                                            tags: { $first: "$tags" },
+                                            faces: { $first: "$faces" },
+                                        }
+                                    }, { 
+                                        $project: { "_id": 0 } 
                                     }
-                                });
+                                ]);
                             }
                             else {
                                 title = "";
@@ -134,10 +184,26 @@ router.get("/:id", async (req, res) => {
                     let locationPick = Math.floor(Math.random() * locationList.length);
 
                     title = locationList[locationPick];
-                    resArr = await mongoose.model("photos", photoSchema, "photos").find({
-                        userId: androidId,
-                        [district[dPick]] : locationList[locationPick]
-                    });
+                    resArr = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                        {
+                            $match: {
+                                userId: androidId,
+                                [district[dPick]] : locationList[locationPick]
+                            }
+                        }, {
+                            $group: {
+                                _id: "$uri",
+                                uri: { $first: "$uri" },
+                                album: { $first: "$album" },
+                                datetime: { $first: "$datetime" },
+                                comment: { $first: "$comment" },
+                                tags: { $first: "$tags" },
+                                faces: { $first: "$faces" },
+                            }
+                        }, { 
+                            $project: { "_id": 0 } 
+                        }
+                    ]);
                 }
                 break;
             case 2:
@@ -147,11 +213,30 @@ router.get("/:id", async (req, res) => {
 
                     title = tagList[tagPick].tag_ko1;
                     //또는 _id로 찾기
-                    resArr = await mongoose.model("photos", photoSchema, "photos").find({
-                        userId: androidId,
-                        tags: tagList[tagPick]
-                    }); 
+                    resArr = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                        {
+                            $match: {
+                                userId: androidId,
+                                tags: tagList[tagPick]
+                            }
+                        }, {
+                            $group: {
+                                _id: "$uri",
+                                uri: { $first: "$uri" },
+                                album: { $first: "$album" },
+                                datetime: { $first: "$datetime" },
+                                comment: { $first: "$comment" },
+                                tags: { $first: "$tags" },
+                                faces: { $first: "$faces" },
+                            }
+                        }, { 
+                            $project: { "_id": 0 } 
+                        }
+                    ]); 
                 }
+                break;
+            case 3:
+                title = "face"; //얼굴 나중에 할 것
                 break;
         }
 

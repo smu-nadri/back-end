@@ -25,7 +25,30 @@ router.get("/taglist/:id", async(req, res) => {
         ]);
         console.log(tagList);
 
-        res.json({ "tagList": tagList });
+        const faceList = await mongoose.model("photos", photoSchema, "photos").aggregate([
+            { $match : { "userId" : androidId } },
+            { $unwind: { path: "$faces" } },
+            {
+                $group: {
+                    _id: "$faces.faceId",
+                    face: {
+                        $first: {
+                            faceId: "$faces.faceId",
+                            name: "$faces.name",
+                            thumbnail: "$uri",
+                            left: "$faces.left",
+                            top: "$faces.top",
+                            width: "$faces.width",
+                            height: "$faces.height",
+                        }
+                    }
+                }
+            },
+            { $sort : { "face.name" : 1 } }
+        ])
+        console.log(faceList);
+
+        res.json({ "tagList": tagList, "faceList" : faceList });
 
     } catch(err){
         console.log(err);
@@ -35,13 +58,54 @@ router.get("/taglist/:id", async(req, res) => {
 });
 
 //클릭한 태그가 달린 사진들 보내주기
-router.get("/:tagidx/:id", async(req, res) => {
+router.get("/:type/:target/:id", async(req, res) => {
     try{
         const androidId = req.params.id;
-        const result = await mongoose.model("photos", photoSchema, "photos").find({
-            userId: androidId,
-            "tags": { $elemMatch: { _id: req.params.tagidx } },
-        });
+        const type = req.params.type;
+        const target = decodeURIComponent(req.params.target)
+
+        let result;
+
+        if(type == "tag"){
+            result = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                {
+                    $match: { userId: androidId, "tags": { $elemMatch: { _id: target } } },
+                }, {
+                    $group: {
+                        _id: "$uri",
+                        uri: { $first: "$uri" },
+                        tags: { $first: "$tags" },
+                        faces: { $first: "$faces" },
+                        comment: { $first: "$comment" },
+                        albums: {
+                            $addToSet: { "title": "$album.title", "type": "$album.type" }
+                        }
+                    }
+                }, { $project: { "_id": 0 } }
+            ]);
+
+            console.log(result);
+        }
+        else if(type == "face"){
+            result = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                {
+                    $match: { userId: androidId, "faces": { $elemMatch: { "faceId": target } } },
+                }, {
+                    $group: {
+                        _id: "$uri",
+                        uri: { $first: "$uri" },
+                        tags: { $first: "$tags" },
+                        faces: { $first: "$faces" },
+                        comment: { $first: "$comment" },
+                        albums: {
+                            $addToSet: { "title": "$album.title", "type": "$album.type" }
+                        }
+                    }
+                }, { $project: { "_id": 0 } }
+            ]);
+
+            console.log(result);
+        }
 
         res.json(result);
 
@@ -192,11 +256,11 @@ router.get("/:id", async (req, res) => {
 
         console.log(tag_regexs, query_regexs);
 
-        let tag_and = [{ $and : [] }, { $and : [] }, { $and : [] }, { $and : [] }];
+        let tag_and = [{ $and : [] }, { $and : [] }, { $and : [] }, { $and : [] }, { $and : [] }];
         let query_and = [{ $and : [] }, { $and : [] }];
         let ninAndQuery = { $and : [] };
         
-        let tag_field = ["tags.tag_en", "tags.tag_ko1", "tags.tag_ko2", "tags.tag_ko3"];
+        let tag_field = ["tags.tag_en", "tags.tag_ko1", "tags.tag_ko2", "tags.tag_ko3", "faces.name"];
         let query_field = ["comment", "location.address"];
         let oper = [ "$all", "$in", "$nin" ];
 

@@ -144,12 +144,12 @@ router.get("/:id", async (req, res) => {
             },
             { $unwind: { path: "$faces" } },
             { $group: {
-                    _id: "$faces.label",
-                    label: { $first: "$faces.label" },
+                    _id: "$faces.faceId",
+                    name: { $first: "$faces.name" },
                     count: { $sum: 1 }
                 }
             },
-            { $sort: { "label" : 1 } },
+            { $sort: { "name" : 1 } },
             { $project: { "_id": 0 } }
         ]);
         console.log("faceCnt", faceCnt);

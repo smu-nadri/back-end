@@ -106,14 +106,29 @@ router.get("/:id", async (req, res) => {
 router.get("/:title/:type/:id", async (req, res) => {
     try{
         const androidId = req.params.id;
-        console.log(req.params.title);
+        const type = req.params.type;
+        const title = new RegExp(`^${req.params.title}$`, "i")
+        console.log(title);
 
-        const result = await mongoose.model("photos", photoSchema, "photos").find({
-            userId: androidId,
-            "album.title": { $regex : req.params.title },
-        }).sort({
-            layoutOrder : 1
-        });
+        let result;
+        if(type == "customAlbum"){
+            result = await mongoose.model("photos", photoSchema, "photos").find({
+                userId: androidId,
+                "album.type": type,
+                "album.title": { $regex : title },
+            }).sort({
+                layoutOrder : 1
+            });
+        }
+        else if(type == "dateAlbum"){
+            result = await mongoose.model("photos", photoSchema, "photos").find({
+                userId: androidId,
+                "album.type": type,
+                "album.title": { $regex : req.params.title },
+            }).sort({
+                layoutOrder : 1
+            });
+        }
 
         for(var i = 0; i < result.length; i++){
             result[i].datetime = result[i].datetime.getTime();
@@ -167,14 +182,11 @@ router.post("/:id", async (req, res) => {
         const album = req.body.album;
         const photos = req.body.photos;
         const deletedList = req.body.deletedList;
-        const initFaceList = req.body.initFaceList;
 
         var resJson = new Array();
         
-        //앨범
-        if(Object.keys(album).length !== 0 && !album.thumbnail){
-            album.thumbnail = photos[0].uri;
-        }
+        //앨범 썸네일 항상 첫번째 사진이 되도록
+        album.thumbnail = photos[0].uri;
 
         //사진 삭제
         for(idx in deletedList){

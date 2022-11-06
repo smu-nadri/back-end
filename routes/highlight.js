@@ -14,7 +14,6 @@ router.get("/:id", async (req, res) => {
         let value = ["date", "location", "tag", "face"];
         let toDayPick = Math.floor(Math.random() * value.length);
         console.log("toDayPick : ", toDayPick, " ", value[toDayPick]);
-        toDayPick = 0;
 
         switch (toDayPick) {
             case 0:
@@ -34,7 +33,7 @@ router.get("/:id", async (req, res) => {
                             { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
                         ]
                     }
-                });
+                }).limit(20);
 
                 title = "작년";
                 resArr = lastyear;
@@ -71,7 +70,7 @@ router.get("/:id", async (req, res) => {
                             }
                         }, { 
                             $project: { "_id": 0 } 
-                        }
+                        }, { $limit : 20 }
                     ]);
 
                     title = "지난달";
@@ -109,7 +108,7 @@ router.get("/:id", async (req, res) => {
                                 }
                             }, { 
                                 $project: { "_id": 0 } 
-                            }
+                            }, { $limit : 20 }
                         ]);
 
                         title = "지난주";
@@ -133,7 +132,7 @@ router.get("/:id", async (req, res) => {
                                             month: { "$month":"$datetime" }
                                         }
                                     }
-                                }
+                                },
                             ]);
         
                             if(dateList != 0){
@@ -164,7 +163,7 @@ router.get("/:id", async (req, res) => {
                                         }
                                     }, { 
                                         $project: { "_id": 0 } 
-                                    }
+                                    }, { $limit :20 }
                                 ]);
                             }
                             else {
@@ -202,7 +201,7 @@ router.get("/:id", async (req, res) => {
                             }
                         }, { 
                             $project: { "_id": 0 } 
-                        }
+                        }, { $limit : 20 }
                     ]);
                 }
                 break;
@@ -231,7 +230,7 @@ router.get("/:id", async (req, res) => {
                             }
                         }, { 
                             $project: { "_id": 0 } 
-                        }
+                        }, { $limit : 20 }
                     ]); 
                 }
                 break;

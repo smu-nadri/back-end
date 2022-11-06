@@ -186,7 +186,7 @@ router.post("/:id", async (req, res) => {
         var resJson = new Array();
         
         //앨범 썸네일 항상 첫번째 사진이 되도록
-        album.thumbnail = photos[0].uri;
+        if(photos.length != 0) album.thumbnail = photos[0].uri;
 
         //사진 삭제
         for(idx in deletedList){

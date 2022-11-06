@@ -249,7 +249,7 @@ router.get("/:id", async (req, res) => {
         if(month != 0) dayAndQuery.$and.push({"$expr" : { "$in": [ { "$month": "$datetime" }, month ] }});
         if(day != 0) dayAndQuery.$and.push({"$expr" : { "$in": [ { "$dayOfMonth": "$datetime" }, day ] }});
         if(season.length != 0) dayAndQuery.$and.push({"$expr" : { "$in": [ { "$month": "$datetime" }, season ] }});
-        if(daytime.length != 0) dayAndQuery.$and.push({"$expr" : { "$in": [ { "$month": "$datetime" }, daytime ] }});
+        if(daytime.length != 0) dayAndQuery.$and.push({"$expr" : { "$in": [ { "$hour": "$datetime" }, daytime ] }});
 
         if(dayAndQuery.$and.length != 0) dayOrQuery.$or.push(dayAndQuery);
         if(dayOrQuery.$or.length != 0) photoQuery.$and.push(dayOrQuery);

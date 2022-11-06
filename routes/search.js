@@ -318,37 +318,9 @@ router.get("/:id", async (req, res) => {
 
         const photoResult = await mongoose.model("photos", photoSchema, "photos").find(photoQuery);
 
-        let albumAndQuery = [];
-        query_regexs.forEach((e, i) => {
-            if(e[oper[i]].length != 0){
-                albumAndQuery.push({ "album.title" : query_regexs[i] });
-            }
-        });
-        if(day_regexs.$all.length != 0) albumAndQuery.push({ "album.title" : day_regexs });
-        console.log(JSON.stringify(albumAndQuery));
-
-        const albumResult = await mongoose.model("photos", photoSchema, "photos").aggregate([
-            {
-                $match: { 
-                    userId: androidId,
-                    "album.type" : "customAlbum",
-                    $and: albumAndQuery
-                }
-            }, {
-                $group: {
-                    _id: "$album.title",
-                    title: { $first: "$album.title" },
-                    type: { $first: "$album.type" },
-                    thumbnail: { $first: "$album.thumbnail" },
-                }
-            }, {
-                $project: { _id : 0 }
-            }
-        ]);
 
         var resJson = {
             "photoResult": photoResult,
-            "albumResult": albumResult,
         };
 
         console.log(resJson);

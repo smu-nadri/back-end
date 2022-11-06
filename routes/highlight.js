@@ -15,7 +15,6 @@ router.get("/:id", async (req, res) => {
         let toDayPick = Math.floor(Math.random() * value.length);
         console.log("toDayPick : ", toDayPick, " ", value[toDayPick]);
 
-        toDayPick = 3;
         switch (toDayPick) {
             case 0:
                 //작년

@@ -15,6 +15,7 @@ router.get("/:id", async (req, res) => {
         let toDayPick = Math.floor(Math.random() * value.length);
         console.log("toDayPick : ", toDayPick, " ", value[toDayPick]);
 
+        toDayPick = 3;
         switch (toDayPick) {
             case 0:
                 //작년
@@ -235,7 +236,34 @@ router.get("/:id", async (req, res) => {
                 }
                 break;
             case 3:
-                title = "face"; //얼굴 나중에 할 것
+                let faceList = await mongoose.model("photos", photoSchema, "photos").find({ userId: androidId }).distinct("faces.name");
+                if(faceList != 0){
+                    let facePick = Math.floor(Math.random() * faceList.length);
+
+                    title = faceList[facePick];
+                    //또는 _id로 찾기
+                    resArr = await mongoose.model("photos", photoSchema, "photos").aggregate([
+                        {
+                            $match: {
+                                userId: androidId,
+                                "faces.name": faceList[facePick]
+                            }
+                        }, {
+                            $group: {
+                                _id: "$uri",
+                                uri: { $first: "$uri" },
+                                album: { $first: "$album" },
+                                datetime: { $first: "$datetime" },
+                                comment: { $first: "$comment" },
+                                tags: { $first: "$tags" },
+                                faces: { $first: "$faces" },
+                            }
+                        }, { 
+                            $project: { "_id": 0 } 
+                        }, { $limit : 20 }
+                    ]); 
+                }
+                console.log(faceList);
                 break;
         }
 

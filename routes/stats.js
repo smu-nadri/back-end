@@ -160,7 +160,7 @@ router.get("/:id", async (req, res) => {
             { 
                 $group: {
                     _id: "$uri",
-                    locality: { $first: { $cond: [ { $eq: [ "$location.locality", null ] }, "$location.locality", "$location.admin" ] } },
+                    locality: { $first: { $cond: [ { $eq: [ "$location.locality", null ] }, "$location.admin", "$location.locality" ] } },
                     count: { $sum: 1 }
                 } 
             },

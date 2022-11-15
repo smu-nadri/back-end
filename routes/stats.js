@@ -160,8 +160,7 @@ router.get("/:id", async (req, res) => {
             { 
                 $group: {
                     _id: "$uri",
-                    locality: { $first: { $cond: [ { $eq: [ "$location.locality", null ] }, "$location.admin", "$location.locality" ] } },
-                    count: { $sum: 1 }
+                    locality: { $first: { $ifNull: [ "$location.locality", "$location.admin" ] } }
                 } 
             },
             {
@@ -182,9 +181,8 @@ router.get("/:id", async (req, res) => {
             { 
                 $group: {
                     _id: "$uri",
-                    locality: { $first: { $cond: [ { $eq: [ "$location.locality", null ] }, "$location.admin", "$location.locality" ] } },
-                    thoroughfare: { $first: "$location.thoroughfare" },
-                    count: { $sum: 1 }
+                    locality: { $first: { $ifNull: [ "$location.locality", "$location.admin" ] } },
+                    thoroughfare: { $first: { $ifNull: [ "$location.thoroughfare", "?" ] } },
                 } 
             },
             { 

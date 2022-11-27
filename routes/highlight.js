@@ -27,7 +27,7 @@ router.get("/:id", async (req, res) => {
                 const lastyear = await mongoose.model("photos", photoSchema, "photos").find({
                     $expr: {
                         $and: [
-                            { userId: androidId },
+                            { $eq: [ { userId: androidId } ] },
                             { $eq: [ { "$year": "$datetime" }, year ] },
                             { $eq: [ { "$month": "$datetime" }, month ] },
                             { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
@@ -51,7 +51,7 @@ router.get("/:id", async (req, res) => {
                             $match: {
                                 $expr: {
                                     $and: [
-                                        { userId: androidId },
+                                        { $eq: [ { userId: androidId } ] },
                                         { $eq: [ { "$year": "$datetime" }, year ] },
                                         { $eq: [ { "$month": "$datetime" }, month ] },
                                         { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
@@ -89,7 +89,7 @@ router.get("/:id", async (req, res) => {
                                 $match: {
                                     $expr: {
                                         $and: [
-                                            { userId: androidId },
+                                            { $eq: [ { userId: androidId } ] },
                                             { $eq: [ { "$year": "$datetime" }, year ] },
                                             { $eq: [ { "$month": "$datetime" }, month ] },
                                             { $eq: [ { "$dayOfMonth": "$datetime" }, day ] }
@@ -145,7 +145,7 @@ router.get("/:id", async (req, res) => {
                                         $match: {
                                             $expr: {
                                                 $and: [
-                                                    { userId: androidId },
+                                                    { $eq: [ { userId: androidId } ] },
                                                     { $eq: [ { "$year": "$datetime" }, dateList[datePick]._id.year ] },
                                                     { $eq: [ { "$month": "$datetime" }, dateList[datePick]._id.month ] }
                                                 ]
